@@ -139,15 +139,15 @@ Emails::make()
 
 For queued emails, persist large files in Laravel Storage instead of keeping their contents in the queued payload.
 
-### `laravel-documents`
+### `laravel-files`
 
-The package does not depend directly on `laravel-documents`. A stored document can be attached using its persisted Storage metadata:
+The package does not depend directly on `laravel-files`. A stored file can be attached using its persisted Storage metadata:
 
 ```php
 Emails::make()
     ->to('customer@example.com')
-    ->subject('Document')
-    ->text('The document is attached.')
+    ->subject('File')
+    ->text('The file is attached.')
     ->attach(
         Attachment::fromStorageDisk($document->disk, $document->path)
             ->as($document->original_name)
@@ -156,7 +156,7 @@ Emails::make()
     ->queue();
 ```
 
-Authorize the document before attaching it, and keep it available until the queued email has been processed.
+Authorize the file before attaching it, and keep it available until the queued email has been processed.
 
 ## Queued Emails
 
