@@ -170,6 +170,22 @@ Emails::make()
     ->queue();
 ```
 
+`queue()` creates a queued Laravel mailable. The email is not sent until a queue worker processes it. In contrast, `send()` sends it during the current request or job.
+
+Configure a queue connection in the application. The database connection is a simple default:
+
+```dotenv
+QUEUE_CONNECTION=database
+```
+
+If the application does not have the queue tables yet, create and run their migrations before dispatching emails:
+
+```bash
+php artisan make:queue-table
+php artisan make:queue-failed-table
+php artisan migrate
+```
+
 The package uses the queue connection and queue name configured in `config/emails.php`:
 
 ```dotenv
@@ -178,15 +194,30 @@ EMAILS_QUEUE=emails
 EMAILS_QUEUE_TRIES=3
 ```
 
-The default retry delays are 60, 300, and 900 seconds. Run a worker to process queued emails:
+When `EMAILS_QUEUE` is not set, Laravel uses the `default` queue. With the configuration above, run a worker for the dedicated `emails` queue:
 
 ```bash
 php artisan queue:work database --queue=emails
 ```
 
-Failed jobs are handled by Laravel and stored according to the application's `config/queue.php` configuration. As with any email retry, a provider accepting a message before a connection failure can result in a duplicate delivery.
+The package configures 3 attempts with backoff delays of 60, 300, and 900 seconds. Failed jobs are handled by Laravel and stored according to the application's `config/queue.php` configuration:
 
-If an email is queued inside a database transaction and depends on data from that transaction, dispatch it after commit according to the application's queue configuration.
+```bash
+php artisan queue:failed
+php artisan queue:retry all
+```
+
+If `QUEUE_CONNECTION=sync`, `queue()` runs immediately and does not create a background job. After deploying code or configuration changes, restart long-running workers:
+
+```bash
+php artisan queue:restart
+```
+
+As with any email retry, a provider accepting a message before a connection failure can result in a duplicate delivery.
+
+If an email is queued inside a database transaction and depends on data from that transaction, configure the queue connection with `after_commit=true` or dispatch it after the transaction commits. Otherwise, the worker may process the email before the transaction is committed.
+
+Attachments from Storage must still exist when the worker processes the email. Persist uploaded files before calling `queue()`; do not place temporary uploads or open streams in a queued message.
 
 ## Testing
 
@@ -207,6 +238,16 @@ Mail::fake();
 Mail::assertSent(EmailMailable::class);
 Mail::assertQueued(EmailMailable::class);
 ```
+
+The real SMTP test should be run explicitly and is not a queue test:
+
+```bash
+EMAIL_TEST_MAILER=smtp \
+EMAIL_TEST_RECIPIENT=customer@example.com \
+php artisan test --compact tests/Feature/EmailSmtpTest.php
+```
+
+For a queued mailable test, use `Mail::fake()` and `Mail::assertQueued()`. To test real background delivery, enqueue the email and run a worker in another terminal.
 
 ## Scope
 
