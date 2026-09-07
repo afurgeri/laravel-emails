@@ -1,0 +1,47 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "afurgeri/laravel-emails",
+    "description": "A small fluent email sender for Laravel applications.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "illuminate/mail": "^13.0",
+        "illuminate/queue": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.7",
+        "pestphp/pest-plugin-laravel": "^4.1",
+        "laravel/pint": "^1.29"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Emails\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Emails\\EmailsServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "pest --compact",
+        "lint": "pint --test --format agent"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
